@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  omnidash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:./dev.db
+      - NEXTAUTH_SECRET=omnidash-super-secret-key-change-in-production
+      - NEXTAUTH_URL=http://localhost:3000
+    restart: always

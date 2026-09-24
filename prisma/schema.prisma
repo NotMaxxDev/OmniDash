@@ -1,0 +1,156 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  pages         Page[]
+  shares        Share[]
+  auditLogs     AuditLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Page {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  icon         String   @default("layout")
+  order        Int      @default(0)
+  layoutConfig String   @default("{}") // JSON string for grid/layout settings
+  theme        String   @default("dark")
+  background   String   @default("default")
+  customCss    String?
+  isPublic     Boolean  @default(false)
+  slug         String?  @unique
+  passwordHash String?
+  isArchived   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  columns Column[]
+  shares  Share[]
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  pageId    String
+  order     Int      @default(0)
+  width     Int      @default(1) // Relative width or grid spans
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  page    Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  widgets Widget[]
+}
+
+model Widget {
+  id        String   @id @default(cuid())
+  columnId  String
+  type      String   // bookmarks, notes, todo, rss, weather, clock, search, etc.
+  order     Int      @default(0)
+  title     String
+  config    String   @default("{}") // JSON string for widget settings
+  collapsed Boolean  @default(false)
+  color     String?  // Optional header accent color
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  column    Column     @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  bookmarks Bookmark[]
+}
+
+model Bookmark {
+  id          String   @id @default(cuid())
+  widgetId    String
+  parentId    String?  // For nested bookmark folders
+  url         String
+  title       String
+  description String?
+  favicon     String?
+  tags        String?  // Comma-separated or JSON string
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  widget Widget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+}
+
+model Share {
+  id        String   @id @default(cuid())
+  pageId    String
+  userId    String
+  role      String   @default("viewer") // viewer or editor
+  createdAt DateTime @default(now())
+
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, userId])
+}
+
+model FeedCache {
+  id        String   @id @default(cuid())
+  url       String   @unique
+  content   String   // XML/JSON cached text
+  fetchedAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
