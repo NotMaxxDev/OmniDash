@@ -2,47 +2,57 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
-import bcrypt from "bcryptjs";
 import { seedDemoData } from "@/lib/seed";
+import crypto from "crypto";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: { strategy: "jwt" },
-  trustHost: true, // Fix UntrustedHost error in Docker/Reverse Proxy
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
   providers: [
     CredentialsProvider({
-      name: "Admin Passkey",
+      name: "Admin Token",
       credentials: {
-        password: { label: "Passwort", type: "password" },
+        password: { label: "Token", type: "password" },
       },
       async authorize(credentials) {
-        const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-        const providedPassword = credentials?.password as string;
+        const providedToken = (credentials?.password as string)?.trim();
 
-        if (!providedPassword || providedPassword !== adminPassword) {
-          return null;
-        }
+        if (!providedToken) return null;
 
-        // Find or create single admin user
         let adminUser = await db.user.findFirst({
           where: { role: "admin" },
         });
 
+        // First Installation Setup
         if (!adminUser) {
-          const hashedPassword = await bcrypt.hash(adminPassword, 10);
+          // If env has token use it, otherwise generate random 10-char token
+          const tokenToUse = process.env.ADMIN_TOKEN || providedToken;
+
           adminUser = await db.user.create({
             data: {
               email: "admin@omnidash.local",
-              name: "Administrator",
-              password: hashedPassword,
+              name: "Admin",
+              password: tokenToUse,
               role: "admin",
             },
           });
           await seedDemoData(adminUser.id);
+          return {
+            id: adminUser.id,
+            email: adminUser.email,
+            name: adminUser.name,
+          };
         }
+
+        // Validate token against stored password or ADMIN_TOKEN env
+        const envToken = process.env.ADMIN_TOKEN;
+        const isValid = providedToken === adminUser.password || (envToken && providedToken === envToken);
+
+        if (!isValid) return null;
 
         return {
           id: adminUser.id,
