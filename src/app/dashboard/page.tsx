@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useDashboardStore } from "@/store/useDashboardStore";
 import { ColumnView, WidgetCard } from "@/components/ColumnView";
+import { CommandPalette } from "@/components/CommandPalette";
 import {
   DndContext,
   DragOverlay,
@@ -13,7 +14,6 @@ import {
   useSensor,
   useSensors,
   DragStartEvent,
-  DragOverEvent,
   DragEndEvent,
 } from "@dnd-kit/core";
 import {
@@ -21,18 +21,18 @@ import {
   Plus,
   Settings,
   LogOut,
-  Moon,
-  Sun,
-  LayoutGrid,
-  Share2,
   FolderPlus,
-  Compass,
+  Command,
+  SlidersHorizontal,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const { pages, activePageId, setPages, setActivePageId, moveWidget } = useDashboardStore();
   const [activeDragWidget, setActiveDragWidget] = useState<any>(null);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -138,36 +138,41 @@ export default function DashboardPage() {
 
   if (!activePage) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center font-sans">
-        <div className="animate-pulse text-sm text-slate-400">Lade Dashboard...</div>
+      <div className="min-h-screen bg-[#0B0F19] text-white flex items-center justify-center font-sans">
+        <div className="flex items-center gap-3 text-slate-400 font-medium">
+          <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <span>Lade Dashboard Workspace...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30">
-      {/* Top Navigation Bar */}
-      <header className="h-16 border-b border-white/10 bg-slate-900/60 backdrop-blur-xl px-6 flex items-center justify-between sticky top-0 z-40">
+    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30">
+      {/* Top Header Bar */}
+      <header className="h-14 border-b border-white/[0.08] bg-[#0E1322]/80 backdrop-blur-xl px-6 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-gradient-to-tr from-cyan-500 to-indigo-500 rounded-xl shadow-lg shadow-cyan-500/20">
-              <LayoutDashboard className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-cyan-500/20 border border-white/10">
+              <LayoutDashboard className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent tracking-tight">
+            <span className="text-base font-bold tracking-tight text-white">
               OmniDash
             </span>
           </div>
 
+          <div className="h-4 w-[1px] bg-white/10" />
+
           {/* Page Tabs */}
-          <div className="flex items-center gap-1.5 bg-slate-800/40 p-1 rounded-xl border border-white/5">
+          <div className="flex items-center gap-1 bg-slate-900/60 p-1 rounded-xl border border-white/5">
             {pages.map((p) => (
               <button
                 key={p.id}
                 onClick={() => setActivePageId(p.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                   p.id === activePage.id
-                    ? "bg-slate-700 text-cyan-400 shadow-sm"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                    ? "bg-slate-800 text-cyan-400 shadow-sm border border-white/10"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
                 }`}
               >
                 {p.title}
@@ -175,7 +180,7 @@ export default function DashboardPage() {
             ))}
             <button
               onClick={handleCreatePage}
-              className="px-2 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-cyan-400 hover:bg-slate-800/50 transition-all flex items-center gap-1"
+              className="px-2 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-cyan-400 hover:bg-slate-800/40 transition-all flex items-center gap-1"
               title="Neue Seite erstellen"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -183,23 +188,30 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* User Controls */}
-        <div className="flex items-center gap-3">
+        {/* Action Controls */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setIsCommandPaletteOpen(true)}
+            className="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/60 border border-white/5 rounded-xl flex items-center gap-2 transition-all"
+          >
+            <Command className="w-3.5 h-3.5" />
+            <span>Suchen...</span>
+            <kbd className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 border border-white/5">⌘K</kbd>
+          </button>
+
           <button
             onClick={handleAddColumn}
-            className="px-3 py-1.5 text-xs font-medium text-slate-200 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 rounded-lg flex items-center gap-1.5 transition-all"
+            className="px-3 py-1.5 text-xs font-semibold text-slate-200 bg-slate-800/60 hover:bg-slate-800 border border-white/10 hover:border-cyan-500/40 rounded-xl flex items-center gap-1.5 transition-all"
           >
-            <FolderPlus className="w-3.5 h-3.5 text-cyan-400" /> Spalte hinzufügen
+            <FolderPlus className="w-3.5 h-3.5 text-cyan-400" />
+            <span>+ Spalte</span>
           </button>
-          <button className="p-2 text-slate-400 hover:text-slate-200 rounded-lg bg-slate-800/40 border border-white/5 hover:border-white/10 transition-all">
-            <Share2 className="w-4 h-4" />
-          </button>
-          <button className="p-2 text-slate-400 hover:text-slate-200 rounded-lg bg-slate-800/40 border border-white/5 hover:border-white/10 transition-all">
-            <Settings className="w-4 h-4" />
-          </button>
+
+          <div className="h-4 w-[1px] bg-white/10 mx-1" />
+
           <button
             onClick={() => signOut()}
-            className="p-2 text-slate-400 hover:text-rose-400 rounded-lg bg-slate-800/40 border border-white/5 hover:border-white/10 transition-all"
+            className="p-2 text-slate-400 hover:text-rose-400 rounded-xl bg-slate-900/60 hover:bg-rose-500/10 border border-white/5 transition-all"
             title="Abmelden"
           >
             <LogOut className="w-4 h-4" />
@@ -207,8 +219,8 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Main Grid Workspace */}
-      <main className="flex-1 p-6 max-w-[1800px] w-full mx-auto">
+      {/* Main Workspace */}
+      <main className="flex-1 p-6 max-w-[1920px] w-full mx-auto">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -216,7 +228,7 @@ export default function DashboardPage() {
           onDragEnd={handleDragEnd}
         >
           <div
-            className="grid gap-6 transition-all"
+            className="grid gap-5 transition-all"
             style={{
               gridTemplateColumns: `repeat(${activePage.columns.length || 1}, minmax(0, 1fr))`,
             }}
@@ -231,6 +243,11 @@ export default function DashboardPage() {
           </DragOverlay>
         </DndContext>
       </main>
+
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
     </div>
   );
 }
