@@ -2,9 +2,8 @@ version: '3.8'
 
 services:
   omnidash:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/notmaxxdev/omnidash:latest
+    container_name: omnidash
     ports:
       - "3000:3000"
     env_file:
@@ -13,4 +12,9 @@ services:
       - DATABASE_URL=file:./dev.db
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-omnidash-super-secret-key-change-in-production}
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+    volumes:
+      - omnidash_data:/app/prisma
     restart: always
+
+volumes:
+  omnidash_data:

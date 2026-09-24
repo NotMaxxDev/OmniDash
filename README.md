@@ -18,45 +18,67 @@ OmniDash ist ein modernes, schnelles und vollständig kostenloses Dashboard-Syst
 
 ---
 
-## 🛠️ Schnellstart mit Docker Compose (Empfohlen)
+## 🛠️ Ein-Klick-Start mit Docker Compose (Kein Code-Download nötig!)
 
-Du benötigst **nur Docker** und eine `.env`-Datei.
+Auf dem Zielserver werden **NUR 2 DATEIEN** benötigt: `docker-compose.yml` und `.env`.
 
 ### 1. `.env` Datei anlegen
 
-Erstelle eine Datei namens `.env` im Projektverzeichnis mit folgenden Mindestwerten:
+Erstelle eine Datei namens `.env`:
 
 ```env
-# 1. Datenbank (Standard: SQLite Datei)
+# 1. Datenbank-Pfad
 DATABASE_URL="file:./dev.db"
 
 # 2. Geheimes Secret für Auth-Sessions (Beliebiger langer String)
 NEXTAUTH_SECRET="dein-super-sicheres-secret-key-12345"
 
-# 3. Öffentliche Domain / App-URL
+# 3. Deine öffentliche App-URL
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-### 2. Starten
+### 2. `docker-compose.yml` anlegen
 
-Führe folgenden Befehl im Terminal aus:
+```yaml
+version: '3.8'
+
+services:
+  omnidash:
+    image: ghcr.io/notmaxxdev/omnidash:latest
+    container_name: omnidash
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - omnidash_data:/app/prisma
+    restart: always
+
+volumes:
+  omnidash_data:
+```
+
+### 3. Starten
+
+Führe auf deinem Server einfach folgenden Befehl aus:
 
 ```bash
 docker compose up -d
 ```
 
-Öffne anschließend `http://localhost:3000` im Browser!
+Docker lädt das fertige Image aus der **GitHub Container Registry** (`ghcr.io/notmaxxdev/omnidash:latest`) herunter und startet OmniDash innerhalb weniger Sekunden auf Port 3000!
 
 ---
 
-## 💻 Manuelles Setup für Entwickler (Ohne Docker)
+## 💻 Entwicklung & Build aus dem Quellcode
 
 ```bash
-# 1. Abhängigkeiten installieren
-npm install
+# 1. Repository klonen
+git clone https://github.com/NotMaxxDev/OmniDash.git
+cd OmniDash
 
-# 2. Datenbank Schema generieren & pushen
-npx prisma db push
+# 2. Abhängigkeiten installieren
+npm install
 
 # 3. Entwicklungs-Server starten
 npm run dev
