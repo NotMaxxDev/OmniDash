@@ -16,28 +16,48 @@ OmniDash ist ein modernes, schnelles und vollständig kostenloses Dashboard-Syst
 - **Sicherheit & Performance**: SSRF-geschützter RSS/Favicon-Proxy, Auth.js Authentication, SQLite/PostgreSQL Unterstützung via Prisma ORM.
 - **Quick Command Palette**: Erreichbar via `Cmd + K` / `Ctrl + K`.
 
-## 🛠️ Schnellstart mit Docker (5 Minuten)
+---
+
+## 🛠️ Schnellstart mit Docker Compose (Empfohlen)
+
+Du benötigst **nur Docker** und eine `.env`-Datei.
+
+### 1. `.env` Datei anlegen
+
+Erstelle eine Datei namens `.env` im Projektverzeichnis mit folgenden Mindestwerten:
+
+```env
+# 1. Datenbank (Standard: SQLite Datei)
+DATABASE_URL="file:./dev.db"
+
+# 2. Geheimes Secret für Auth-Sessions (Beliebiger langer String)
+NEXTAUTH_SECRET="dein-super-sicheres-secret-key-12345"
+
+# 3. Öffentliche Domain / App-URL
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### 2. Starten
+
+Führe folgenden Befehl im Terminal aus:
 
 ```bash
-# 1. Repository klonen
-git clone https://github.com/user/omnidash.git
-cd omnidash
-
-# 2. Docker Container starten
 docker compose up -d
 ```
 
 Öffne anschließend `http://localhost:3000` im Browser!
 
-## 💻 Manuelles Setup für Entwickler
+---
+
+## 💻 Manuelles Setup für Entwickler (Ohne Docker)
 
 ```bash
-# Abhängigkeiten installieren
+# 1. Abhängigkeiten installieren
 npm install
 
-# SQLite Datenbank initialisieren
+# 2. Datenbank Schema generieren & pushen
 npx prisma db push
 
-# Entwicklungs-Server starten
+# 3. Entwicklungs-Server starten
 npm run dev
 ```

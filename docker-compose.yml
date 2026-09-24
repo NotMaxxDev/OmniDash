@@ -7,8 +7,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=file:./dev.db
-      - NEXTAUTH_SECRET=omnidash-super-secret-key-change-in-production
-      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-omnidash-super-secret-key-change-in-production}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
     restart: always
